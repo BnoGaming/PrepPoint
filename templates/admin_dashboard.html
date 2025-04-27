@@ -1,0 +1,274 @@
+{# templates/admin_dashboard.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #343a40;
+            padding-top: 20px;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+        }
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="px-4 py-3 mb-3 text-center">
+            <h5>Admin Panel</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="bi bi-people me-2"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dsa_questions') }}">
+                    <i class="bi bi-code-square me-2"></i> DSA Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.aptitude_questions') }}">
+                    <i class="bi bi-lightbulb me-2"></i> Aptitude Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                    <i class="bi bi-graph-up me-2"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.system') }}">
+                    <i class="bi bi-hdd me-2"></i> System
+                </a>
+            </li>
+            <li class="nav-item mt-3">
+                <a class="nav-link" href="{{ url_for('admin.admin_logout') }}">
+                    <i class="bi bi-box-arrow-left me-2"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Dashboard</h2>
+                <span class="text-muted">Welcome, {{ session.get('user_name', 'Admin') }}</span>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people card-icon"></i>
+                            <h3>{{ user_count }}</h3>
+                            <h5>Total Users</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-text card-icon"></i>
+                            <h3>{{ resume_count + interview_count }}</h3>
+                            <h5>Total Sessions</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-code-square card-icon"></i>
+                            <h3>{{ dsa_count + aptitude_count }}</h3>
+                            <h5>Test Submissions</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5>Growth Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="growthChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5>Storage Usage</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="storageChart" height="260"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest Users Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dashboard-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5>Latest Users</h5>
+                            <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Registration Date</th>
+                                            <th>Profile Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in latest_users %}
+                                        <tr>
+                                            <td>{{ user.name }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{% if user.profile_completed %}<span class="badge bg-success">Complete</span>{% else %}<span class="badge bg-warning">Incomplete</span>{% endif %}</td>
+                                            <td>
+                                                <a href="{{ url_for('admin.view_user', user_id=user._id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Growth Chart
+        const growthCtx = document.getElementById('growthChart').getContext('2d');
+        const growthChart = new Chart(growthCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for stat in monthly_stats %}'{{ stat.month }}',{% endfor %}],
+                datasets: [{
+                    label: 'New Users',
+                    data: [{% for stat in monthly_stats %}{{ stat.users }},{% endfor %}],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.3
+                }, {
+                    label: 'Interviews',
+                    data: [{% for stat in monthly_stats %}{{ stat.interviews }},{% endfor %}],
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Storage Chart
+        const storageCtx = document.getElementById('storageChart').getContext('2d');
+        const storageChart = new Chart(storageCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Users', 'Resumes', 'Interviews', 'DSA', 'Aptitude'],
+                datasets: [{
+                    data: [
+                        {{ storage_stats.users|round(2) }}, 
+                        {{ storage_stats.resumes|round(2) }}, 
+                        {{ storage_stats.interviews|round(2) }}, 
+                        {{ storage_stats.dsa|round(2) }}, 
+                        {{ storage_stats.aptitude|round(2) }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value.toFixed(2)} MB`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

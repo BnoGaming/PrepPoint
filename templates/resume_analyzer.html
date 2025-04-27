@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <!-- <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .upload-icon {
+            font-size: 64px;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        #preview {
+            display: none;
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .custom-file-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+            margin-top: 20px;
+        }
+        .instructions {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style> -->
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">AI Career Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/resume-analyzer">Resume Analyzer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/interview">Interview Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dsa-questions">DSA Practice</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Resume Analyzer</h1>
+        
+        <div class="upload-container">
+            <div class="text-center">
+                <div class="upload-icon">
+                    <i class="far fa-file-pdf"></i>
+                    📄
+                </div>
+                <h2 class="mb-4">Upload Your Resume</h2>
+            </div>
+            
+            <div class="instructions">
+                <p>Upload your resume in PDF format to receive a detailed analysis including:</p>
+                <ul>
+                    <li>Key strengths highlighted in your resume</li>
+                    <li>Areas that could use improvement</li>
+                    <li>Overall rating and professional feedback</li>
+                </ul>
+                <p class="mb-0"><strong>Note:</strong> Your resume will be analyzed by AI to provide objective feedback.</p>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="candidate_name" class="form-label">Your Name</label>
+                    <input type="text" class="form-control" id="candidate_name" name="candidate_name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="resume" class="form-label">Upload Resume (PDF only)</label>
+                    <input class="form-control" type="file" id="resume" name="resume" accept=".pdf" required>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">Analyze Resume</button>
+                </div>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Analyzing your resume... This may take a moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this inside the upload-container div, after the form -->
+<div class="mt-4 pt-3 border-top">
+    <h5>Looking for more career help?</h5>
+    <div class="row mt-3">
+        <div class="col-md-6 mb-2">
+            <a href="/interview" class="btn btn-outline-primary w-100">
+                <i class="fas fa-comments me-2"></i>Practice Interviews
+            </a>
+        </div>
+        <div class="col-md-6 mb-2">
+            <a href="/data-viewer" class="btn btn-outline-primary w-100">
+                <i class="fas fa-chart-bar me-2"></i>View Analytics
+            </a>
+        </div>
+    </div>
+</div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+       // This script handles the resume upload and analysis process
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const loadingElement = document.getElementById('loading');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    // Show loading animation when form is submitted
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        
+        // Show loading state
+        loadingElement.style.display = 'block';
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = 'Analyzing...';
+        
+        // Get form data
+        const formData = new FormData(form);
+        
+        // Make AJAX request to server
+        fetch('/resume-analyzer', {
+            method: 'POST',
+            body: formData,
+            // Don't set Content-Type header here, let the browser set it for multipart/form-data
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            // Check if response is a redirect to results page
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            // If we're here, we have JSON data (not a redirect)
+            if (data.error) {
+                showAlert(data.error, 'danger');
+            } else if (data.redirect) {
+                // If the server specifies a redirect
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('An error occurred while analyzing the resume. Please try again.', 'danger');
+            // Reset UI state
+            loadingElement.style.display = 'none';
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = 'Analyze Resume';
+        });
+    });
+    
+    // Function to display file name when chosen
+    const resumeInput = document.getElementById('resume');
+    if (resumeInput) {
+        resumeInput.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'No file chosen';
+            const fileLabel = document.querySelector('.custom-file-label');
+            if (fileLabel) {
+                fileLabel.textContent = fileName;
+            }
+            
+            // Validate file type
+            if (this.files[0]) {
+                const fileExt = fileName.split('.').pop().toLowerCase();
+                if (fileExt !== 'pdf') {
+                    showAlert('Please upload a PDF file only.', 'warning');
+                    this.value = ''; // Clear the file input
+                    if (fileLabel) {
+                        fileLabel.textContent = 'No file chosen';
+                    }
+                }
+            }
+        });
+    }
+    
+    // Helper function to show alerts
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert alert before the upload container
+        const uploadContainer = document.querySelector('.upload-container');
+        uploadContainer.parentNode.insertBefore(alertDiv, uploadContainer);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.add('fade');
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 500);
+        }, 5000);
+    }
+});
+    </script>
+    
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2025 Interview Assistant. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

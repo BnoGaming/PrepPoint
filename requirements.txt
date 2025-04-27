@@ -1,0 +1,12 @@
+Flask
+requests
+groq
+pdfplumber
+PyPDF2
+pymongo
+gtts
+pydub
+opencv-python
+numpy
+Pillow
+pyttsx3

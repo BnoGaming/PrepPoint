@@ -1,0 +1,486 @@
+{# templates/admin_analytics.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Analytics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #343a40;
+            padding-top: 20px;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+        }
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        main {
+            padding-top: 24px;
+        }
+        /* .navbar {
+            background-color: #343a40 !important;
+        } */
+        .stat-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card-icon {
+            font-size: 2rem;
+            padding: 15px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="px-4 py-3 mb-3 text-center">
+            <h5>Admin Panel</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="bi bi-people me-2"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dsa_questions') }}">
+                    <i class="bi bi-code-square me-2"></i> DSA Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.aptitude_questions') }}">
+                    <i class="bi bi-lightbulb me-2"></i> Aptitude Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                    <i class="bi bi-graph-up me-2"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.system') }}">
+                    <i class="bi bi-hdd me-2"></i> System
+                </a>
+            </li>
+            <li class="nav-item mt-3">
+                <a class="nav-link" href="{{ url_for('admin.admin_logout') }}">
+                    <i class="bi bi-box-arrow-left me-2"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Analytics Dashboard</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-download"></i> Export Data
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-calendar3"></i> This Month
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overview Stats -->
+                <div class="row mb-4">
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-primary h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-primary bg-opacity-25 text-primary">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">Total Users</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.total_users }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-success h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-success bg-opacity-25 text-success">
+                                    <i class="bi bi-person-check-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">Active Users</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.active_users }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-info h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-info bg-opacity-25 text-info">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">Resume Analysis</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.total_resumes }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-warning h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-warning bg-opacity-25 text-warning">
+                                    <i class="bi bi-mic-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">Interviews</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.total_interviews }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-danger h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-danger bg-opacity-25 text-danger">
+                                    <i class="bi bi-code-square"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">DSA Tests</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.total_dsa }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 mb-4">
+                        <div class="card stat-card border-left-secondary h-100 py-2">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-card-icon bg-secondary bg-opacity-25 text-secondary">
+                                    <i class="bi bi-question-circle-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs fw-bold text-uppercase mb-1">Aptitude Tests</div>
+                                    <div class="h5 mb-0 fw-bold">{{ stats.total_aptitude }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Growth Chart -->
+                <div class="row mb-4">
+                    <div class="col-xl-8 col-lg-7">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold">Monthly Activity Growth</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="monthlyGrowthChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-5">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold">Feature Usage Distribution</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="featureDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Tier Analysis -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold">User Tier Analysis</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>User Tier</th>
+                                                <th>Users</th>
+                                                <th>Resume Analyses</th>
+                                                <th>Interviews</th>
+                                                <th>DSA Submissions</th>
+                                                <th>Aptitude Tests</th>
+                                                <th>Avg. Activity/User</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Free Tier</td>
+                                                <td>{{ feature_usage.free_users.count }}</td>
+                                                <td>{{ feature_usage.free_users.resumes }}</td>
+                                                <td>{{ feature_usage.free_users.interviews }}</td>
+                                                <td>{{ feature_usage.free_users.dsa }}</td>
+                                                <td>{{ feature_usage.free_users.aptitude }}</td>
+                                                <td>
+                                                    {% if feature_usage.free_users.count > 0 %}
+                                                        {{ ((feature_usage.free_users.resumes + feature_usage.free_users.interviews + 
+                                                         feature_usage.free_users.dsa + feature_usage.free_users.aptitude) / 
+                                                         feature_usage.free_users.count) | round(2) }}
+                                                    {% else %}
+                                                        0
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Premium Tier</td>
+                                                <td>{{ feature_usage.premium_users.count }}</td>
+                                                <td>{{ feature_usage.premium_users.resumes }}</td>
+                                                <td>{{ feature_usage.premium_users.interviews }}</td>
+                                                <td>{{ feature_usage.premium_users.dsa }}</td>
+                                                <td>{{ feature_usage.premium_users.aptitude }}</td>
+                                                <td>
+                                                    {% if feature_usage.premium_users.count > 0 %}
+                                                        {{ ((feature_usage.premium_users.resumes + feature_usage.premium_users.interviews + 
+                                                         feature_usage.premium_users.dsa + feature_usage.premium_users.aptitude) / 
+                                                         feature_usage.premium_users.count) | round(2) }}
+                                                    {% else %}
+                                                        0
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Growth Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold">Monthly Activity Data</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Month</th>
+                                                <th>New Users</th>
+                                                <th>Resume Analyses</th>
+                                                <th>Interviews</th>
+                                                <th>DSA Submissions</th>
+                                                <th>Aptitude Tests</th>
+                                                <th>Total Activity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for month in monthly_growth %}
+                                                <tr>
+                                                    <td>{{ month.month }}</td>
+                                                    <td>{{ month.users }}</td>
+                                                    <td>{{ month.resumes }}</td>
+                                                    <td>{{ month.interviews }}</td>
+                                                    <td>{{ month.dsa }}</td>
+                                                    <td>{{ month.aptitude }}</td>
+                                                    <td>{{ month.users + month.resumes + month.interviews + month.dsa + month.aptitude }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Monthly Growth Chart
+        const monthlyGrowthCtx = document.getElementById('monthlyGrowthChart').getContext('2d');
+        const monthlyGrowthChart = new Chart(monthlyGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for month in monthly_growth %}'{{ month.month }}',{% endfor %}],
+                datasets: [
+                    {
+                        label: 'New Users',
+                        data: [{% for month in monthly_growth %}{{ month.users }},{% endfor %}],
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                        pointBorderColor: 'rgba(78, 115, 223, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                        pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Resume Analyses',
+                        data: [{% for month in monthly_growth %}{{ month.resumes }},{% endfor %}],
+                        backgroundColor: 'rgba(54, 185, 204, 0.05)',
+                        borderColor: 'rgba(54, 185, 204, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(54, 185, 204, 1)',
+                        pointBorderColor: 'rgba(54, 185, 204, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(54, 185, 204, 1)',
+                        pointHoverBorderColor: 'rgba(54, 185, 204, 1)',
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Interviews',
+                        data: [{% for month in monthly_growth %}{{ month.interviews }},{% endfor %}],
+                        backgroundColor: 'rgba(246, 194, 62, 0.05)',
+                        borderColor: 'rgba(246, 194, 62, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(246, 194, 62, 1)',
+                        pointBorderColor: 'rgba(246, 194, 62, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(246, 194, 62, 1)',
+                        pointHoverBorderColor: 'rgba(246, 194, 62, 1)',
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'DSA Submissions',
+                        data: [{% for month in monthly_growth %}{{ month.dsa }},{% endfor %}],
+                        backgroundColor: 'rgba(231, 74, 59, 0.05)',
+                        borderColor: 'rgba(231, 74, 59, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(231, 74, 59, 1)',
+                        pointBorderColor: 'rgba(231, 74, 59, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(231, 74, 59, 1)',
+                        pointHoverBorderColor: 'rgba(231, 74, 59, 1)',
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Aptitude Tests',
+                        data: [{% for month in monthly_growth %}{{ month.aptitude }},{% endfor %}],
+                        backgroundColor: 'rgba(108, 117, 125, 0.05)',
+                        borderColor: 'rgba(108, 117, 125, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(108, 117, 125, 1)',
+                        pointBorderColor: 'rgba(108, 117, 125, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(108, 117, 125, 1)',
+                        pointHoverBorderColor: 'rgba(108, 117, 125, 1)',
+                        pointHitRadius: 10,
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Feature Distribution Chart
+        const totalActivities = {
+            'resumes': {{ feature_usage.free_users.resumes + feature_usage.premium_users.resumes }},
+            'interviews': {{ feature_usage.free_users.interviews + feature_usage.premium_users.interviews }},
+            'dsa': {{ feature_usage.free_users.dsa + feature_usage.premium_users.dsa }},
+            'aptitude': {{ feature_usage.free_users.aptitude + feature_usage.premium_users.aptitude }}
+        };
+        
+        const featureDistributionCtx = document.getElementById('featureDistributionChart').getContext('2d');
+        const featureDistributionChart = new Chart(featureDistributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Resume Analysis', 'Interviews', 'DSA Submissions', 'Aptitude Tests'],
+                datasets: [{
+                    data: [totalActivities.resumes, totalActivities.interviews, totalActivities.dsa, totalActivities.aptitude],
+                    backgroundColor: [
+                        'rgba(54, 185, 204, 0.8)',
+                        'rgba(246, 194, 62, 0.8)',
+                        'rgba(231, 74, 59, 0.8)',
+                        'rgba(108, 117, 125, 0.8)'
+                    ],
+                    hoverBackgroundColor: [
+                        'rgba(54, 185, 204, 1)',
+                        'rgba(246, 194, 62, 1)',
+                        'rgba(231, 74, 59, 1)',
+                        'rgba(108, 117, 125, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

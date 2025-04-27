@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aptitude Test - AI Career Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .question-card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .question-options label {
+            display: block;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .question-options label:hover {
+            background-color: #f0f0f0;
+        }
+        .question-options input[type="radio"]:checked + label {
+            background-color: #d1e7ff;
+            border: 1px solid #0d6efd;
+        }
+        .question-options input[type="radio"] {
+            display: none;
+        }
+        .badge-easy {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-medium {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .badge-hard {
+            background-color: #dc3545;
+            color: white;
+        }
+        .hero-section {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">AI Career Tools</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/resume-analyzer">Resume Analyzer</a></li>
+                <li class="nav-item"><a class="nav-link" href="/interview">Interview Assistant</a></li>
+                <li class="nav-item"><a class="nav-link" href="/dsa-practice">DSA Practice</a></li>
+                <li class="nav-item"><a class="nav-link active" href="/aptitude-test">Aptitude Test</a></li>
+                <li class="nav-item"><a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a></li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/auth/profile">Profile</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-5">Aptitude Test</h1>
+        <p class="lead">Test your skills with our comprehensive aptitude assessment</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Test Instructions -->
+    <div id="test-instructions" class="card mb-4" {% if test_started %}style="display: none;"{% endif %}>
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Test Instructions</h4>
+        </div>
+        <div class="card-body">
+            <h5>Welcome to the Aptitude Assessment Test</h5>
+            <p>This test consists of 20 questions distributed as follows:</p>
+            <ul>
+                <li><span class="badge badge-easy">Easy</span> - 10 questions</li>
+                <li><span class="badge badge-medium">Medium</span> - 6 questions</li>
+                <li><span class="badge badge-hard">Hard</span> - 4 questions</li>
+            </ul>
+            <p>You will have <strong>30 minutes</strong> to complete the test. Your score will be calculated based on the number of correct answers.</p>
+            <p><strong>Note:</strong> Once you submit the test, you cannot retake it with the same questions.</p>
+            <form action="{{ url_for('aptitude.start_test') }}" method="POST">
+                <button type="submit" class="btn btn-primary btn-lg">Start Test</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Test Area -->
+    <div id="test-area" {% if not test_started %}style="display: none;"{% endif %}>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <!-- <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div> -->
+            </div>
+            <div class="col-md-6">
+                <div class="timer">
+                    Time Remaining: <span id="timer">{{ time_remaining }}</span>
+                </div>
+            </div>
+        </div>
+
+        <form id="aptitude-test-form" action="{{ url_for('aptitude.submit_test') }}" method="POST">
+            {% for question in questions %}
+            <div class="card question-card" id="question-{{ loop.index }}" {% if current_question != loop.index %}style="display: none;"{% endif %}>
+                <div class="card-header d-flex justify-content-between">
+                    <span>Question {{ loop.index }}</span>
+                    <span class="badge badge-{{ question.difficulty }}">{{ question.difficulty|capitalize }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="question-text">{{ question.question }}</p>
+                    <div class="question-options">
+                        {% for option in question.options %}
+                        <div class="option">
+                            <input type="radio" name="{{ question.id }}" id="q{{ question.id }}_{{ loop.index }}" 
+                                value="{{ loop.index }}" {% if user_answers.get(question.id) == loop.index|string %}checked{% endif %}>
+                            <label for="q{{ question.id }}_{{ loop.index }}">{{ option }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between mt-4 mb-5">
+                <button type="button" class="btn btn-secondary" onclick="navigate(-1)">Previous</button>
+                <div>
+                    <span id="question-counter">Question {{ current_question }} of {{ questions|length }}</span>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="navigate(1)">Next</button>
+            </div>
+
+            <div class="text-center mt-4 mb-5">
+                <button type="submit" class="btn btn-danger btn-lg">Submit Test</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="bg-dark text-white py-3">
+    <div class="container text-center">
+        <p>&copy; 2025 AI Career Tools. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Timer functionality
+        const timerElement = document.getElementById('timer');
+        if (timerElement) {
+            let timeArray = timerElement.textContent.split(':');
+            let minutes = parseInt(timeArray[0]);
+            let seconds = parseInt(timeArray[1]);
+            let totalSeconds = minutes * 60 + seconds;
+            
+            const timer = setInterval(function() {
+                totalSeconds--;
+                
+                if (totalSeconds <= 0) {
+                    clearInterval(timer);
+                    alert('Time is up! Your test will be submitted automatically.');
+                    document.getElementById('aptitude-test-form').submit();
+                    return;
+                }
+                
+                const min = Math.floor(totalSeconds / 60);
+                const sec = totalSeconds % 60;
+                timerElement.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+    });
+
+    // Navigation between questions
+    function navigate(direction) {
+        const currentQuestion = parseInt(document.getElementById('question-counter').textContent.match(/\d+/)[0]);
+        const totalQuestions = parseInt(document.getElementById('question-counter').textContent.match(/of (\d+)/)[1]);
+        
+        let newQuestion = currentQuestion + direction;
+        if (newQuestion < 1) newQuestion = 1;
+        if (newQuestion > totalQuestions) newQuestion = totalQuestions;
+        
+        // Hide all questions
+        document.querySelectorAll('.question-card').forEach(card => {
+            card.style.display = 'none';
+        });
+        
+        // Show the selected question
+        document.getElementById(`question-${newQuestion}`).style.display = 'block';
+        
+        // Update counter
+        document.getElementById('question-counter').textContent = `Question ${newQuestion} of ${totalQuestions}`;
+        
+        // Save the answer (using fetch to avoid page reload)
+        const currentCard = document.getElementById(`question-${currentQuestion}`);
+        const selectedOption = currentCard.querySelector('input[type="radio"]:checked');
+        
+        if (selectedOption) {
+            fetch('/aptitude-test/submit-answer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question_id: selectedOption.name,
+                    answer: selectedOption.value
+                }),
+            });
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,313 @@
+{# templates/admin_aptitude_questions.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Aptitude Questions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #343a40;
+            padding-top: 20px;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+        }
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        main {
+            padding-top: 24px;
+        }
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+        .difficulty-easy {
+            background-color: #28a745;
+            color: white;
+        }
+        .difficulty-medium {
+            background-color: #ffc107;
+            color: black;
+        }
+        .difficulty-hard {
+            background-color: #dc3545;
+            color: white;
+        }
+        .custom-alert {
+            color: black !important;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #eee;
+            padding: 2px 8px;
+            margin: 2px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="px-4 py-3 mb-3 text-center">
+            <h5>Admin Panel</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="bi bi-people me-2"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dsa_questions') }}">
+                    <i class="bi bi-code-square me-2"></i> DSA Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.aptitude_questions') }}">
+                    <i class="bi bi-lightbulb me-2"></i> Aptitude Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                    <i class="bi bi-graph-up me-2"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.system') }}">
+                    <i class="bi bi-hdd me-2"></i> System
+                </a>
+            </li>
+            <li class="nav-item mt-3">
+                <a class="nav-link" href="{{ url_for('admin.admin_logout') }}">
+                    <i class="bi bi-box-arrow-left me-2"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Aptitude Questions</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="{{ url_for('admin.add_aptitude_question') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Add New Question
+                        </a>
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} custom-alert">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-search me-1"></i> Filter Questions
+                    </div>
+                    <div class="card-body">
+                        <form class="row g-3">
+                            <div class="col-md-4">
+                                <label for="filterCategory" class="form-label">Category</label>
+                                <select class="form-select" id="filterCategory">
+                                    <option value="">All</option>
+                                    <option value="logical">Logical Reasoning</option>
+                                    <option value="quantitative">Quantitative Aptitude</option>
+                                    <option value="verbal">Verbal Ability</option>
+                                    <option value="data-interpretation">Data Interpretation</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filterDifficulty" class="form-label">Difficulty</label>
+                                <select class="form-select" id="filterDifficulty">
+                                    <option value="">All</option>
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                                <button type="reset" class="btn btn-secondary ms-2">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Question</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for question in questions %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td class="question-text">{{ question.questions }}</td>
+                                <td>
+                                    <span class="badge category-badge">{{ question.type }}</span>
+                                </td>
+                                <td>
+                                    <span class="difficulty-badge difficulty-{{ question.difficulty.lower() }}">
+                                        {{ question.difficulty }}
+                                    </span>
+                                </td>
+                                {% if question.created_at %}
+                                <td>{{ question.created_at.strftime('%Y-%m-%d') }}</td>
+                                {% else %}
+                                <td>Not Available</td>
+                                {% endif %}
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" data-bs-target="#viewQuestionModal" 
+                                            data-question="{{ question.questions }}"
+                                            data-options="{{ question.options|default([])|tojson }}"
+                                            data-correct="{{ question.answer }}">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <a href="{{ url_for('admin.edit_aptitude_question', question_id=question._id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                            data-question-id="{{ question._id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- View Question Modal -->
+    <div class="modal fade" id="viewQuestionModal" tabindex="-1" aria-labelledby="viewQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewQuestionModalLabel">Question Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Question:</h6>
+                    <p id="modalQuestion"></p>
+                    
+                    <h6 class="mt-3">Options:</h6>
+                    <ol class="list-group list-group-numbered" id="modalOptions">
+                        <!-- Options will be inserted here dynamically -->
+                    </ol>
+                    
+                    <h6 class="mt-3">Correct Answer:</h6>
+                    <p id="modalCorrectAnswer" class="fw-bold text-success"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this question? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteForm" method="POST">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set up view question modal
+        const viewQuestionModal = document.getElementById('viewQuestionModal')
+        if (viewQuestionModal) {
+            viewQuestionModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget
+                const question = button.getAttribute('data-question')
+                const options = JSON.parse(button.getAttribute('data-options'))
+                const correctAnswer = parseInt(button.getAttribute('data-correct'))
+                
+                document.getElementById('modalQuestion').textContent = question
+                
+                const optionsList = document.getElementById('modalOptions')
+                optionsList.innerHTML = ''
+                
+                options.forEach((option, index) => {
+                    const listItem = document.createElement('li')
+                    listItem.className = 'list-group-item' + (index === correctAnswer ? ' list-group-item-success' : '')
+                    listItem.textContent = option
+                    optionsList.appendChild(listItem)
+                })
+                
+                document.getElementById('modalCorrectAnswer').textContent = `Option ${correctAnswer + 1}: ${options[correctAnswer]}`
+            })
+        }
+        
+        // Set up delete modal
+        const deleteModal = document.getElementById('deleteModal')
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget
+                const questionId = button.getAttribute('data-question-id')
+                const deleteForm = document.getElementById('deleteForm')
+                deleteForm.action = `/admin/aptitude-question/delete/${questionId}`
+            })
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Management - Admin Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background-color: #343a40;
+            padding-top: 20px;
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 20px;
+        }
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .dashboard-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="px-4 py-3 mb-3 text-center">
+            <h5>Admin Panel</h5>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.users') }}">
+                    <i class="bi bi-people me-2"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.dsa_questions') }}">
+                    <i class="bi bi-code-square me-2"></i> DSA Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.aptitude_questions') }}">
+                    <i class="bi bi-lightbulb me-2"></i> Aptitude Questions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                    <i class="bi bi-graph-up me-2"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin.system') }}">
+                    <i class="bi bi-hdd me-2"></i> System
+                </a>
+            </li>
+            <li class="nav-item mt-3">
+                <a class="nav-link" href="{{ url_for('admin.admin_logout') }}">
+                    <i class="bi bi-box-arrow-left me-2"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>System Management</h2>
+                <!-- <div>
+                    <a href="{{ url_for('admin.backup') }}" class="btn btn-primary">
+                        <i class="bi bi-download me-2"></i>Create Backup
+                    </a>
+                </div> -->
+            </div>
+
+            <!-- Database Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-database card-icon"></i>
+                            <h3>{{ storage_stats.total_size|round(2) }} MB</h3>
+                            <h5>Database Size</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-collection card-icon"></i>
+                            <h3>{{ storage_stats.collections }}</h3>
+                            <h5>Collections</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-grid card-icon"></i>
+                            <h3>{{ storage_stats.objects }}</h3>
+                            <h5>Total Objects</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-diagram-3 card-icon"></i>
+                            <h3>{{ storage_stats.index_size|round(2) }} MB</h3>
+                            <h5>Index Size</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5>Storage Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="storageDistributionChart" height="260"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5>Database Stats</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tbody>
+                                        <tr>
+                                            <th>Data Size</th>
+                                            <td>{{ storage_stats.total_size|round(2) }} MB</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Storage Size</th>
+                                            <td>{{ storage_stats.storage_size|round(2) }} MB</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Index Size</th>
+                                            <td>{{ storage_stats.index_size|round(2) }} MB</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total Size</th>
+                                            <td>{{ (storage_stats.storage_size + storage_stats.index_size)|round(2) }} MB</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Number of Collections</th>
+                                            <td>{{ storage_stats.collections }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Number of Objects</th>
+                                            <td>{{ storage_stats.objects }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collection Sizes Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5>Collection Sizes</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Collection</th>
+                                            <th>Size (MB)</th>
+                                            <th>Documents</th>
+                                            <th>Size Distribution</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for collection in collection_sizes %}
+                                        <tr>
+                                            <td>{{ collection.name }}</td>
+                                            <td>{{ collection.size|round(2) }}</td>
+                                            <td>{{ collection.count }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                         style="width: {{ (collection.size / storage_stats.total_size * 100)|round(1) }}%;" 
+                                                         aria-valuenow="{{ (collection.size / storage_stats.total_size * 100)|round(1) }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                        {{ (collection.size / storage_stats.total_size * 100)|round(1) }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Collection sizes chart
+        const collectionLabels = [{% for collection in collection_sizes %}{% if loop.index <= 5 %}'{{ collection.name }}',{% endif %}{% endfor %} 'Others'];
+        const collectionData = [
+            {% for collection in collection_sizes %}
+                {% if loop.index <= 5 %}
+                    {{ collection.size|round(2) }},
+                {% endif %}
+            {% endfor %}
+            {{ collection_sizes[5:] | sum(attribute='size') | round(2) if collection_sizes|length > 5 else 0 }}
+        ];
+        
+        // Setup storage distribution chart
+        const ctxStorageDistribution = document.getElementById('storageDistributionChart').getContext('2d');
+        new Chart(ctxStorageDistribution, {
+            type: 'pie',
+            data: {
+                labels: collectionLabels,
+                datasets: [{
+                    data: collectionData,
+                    backgroundColor: [
+                        '#0d6efd', 
+                        '#198754', 
+                        '#0dcaf0', 
+                        '#ffc107', 
+                        '#dc3545',
+                        '#6c757d'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw.toFixed(2);
+                                const percentage = (context.raw / {{ storage_stats.total_size }} * 100).toFixed(1);
+                                return `${label}: ${value} MB (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analysis Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+        .strength-card .card-header {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .weakness-card .card-header {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .improvement-card .card-header {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .summary-card .card-header {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .rating-badge {
+            font-size: 1.5rem;
+            padding: 10px 15px;
+            border-radius: 50%;
+            min-width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .list-group-item {
+            border: none;
+            padding: 10px 15px;
+            position: relative;
+        }
+        .list-group-item:before {
+            content: "•";
+            margin-right: 10px;
+            color: #6c757d;
+        }
+        .back-button {
+            margin-bottom: 20px;
+        }
+        .animation-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Print-specific styles */
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #dee2e6;
+            }
+            .card:hover {
+                transform: none;
+            }
+            .animation-fade-in {
+                animation: none;
+                opacity: 1;
+            }
+            .page-footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                font-size: 0.8rem;
+                color: #6c757d;
+                padding: 10px 0;
+                border-top: 1px solid #dee2e6;
+            }
+            .page-header {
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #dee2e6;
+            }
+            .print-watermark {
+                display: block !important;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 8rem;
+                color: rgba(200, 200, 200, 0.2);
+                z-index: -1;
+            }
+        }
+        .print-watermark {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-between align-items-center no-print">
+                <a href="{{ url_for('resume_analyzer') }}" class="btn btn-primary back-button">
+                    <i class="fas fa-arrow-left"></i> Back to Resume Analyzer
+                </a>
+                <div class="action-buttons">
+                    <button id="printButton" class="btn btn-success">
+                        <i class="fas fa-print me-2"></i> Print Report
+                    </button>
+                    <button id="downloadPdfButton" class="btn btn-info">
+                        <i class="fas fa-file-pdf me-2"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+            <div class="col-12">
+                <h1 class="text-center mb-4">Resume Analysis Results</h1>
+            </div>
+        </div>
+
+        <!-- Print-only header -->
+        <div class="page-header d-none d-print-block">
+            <h2>Resume Analysis Report</h2>
+            <p>Generated on <span id="currentDate"></span></p>
+        </div>
+        
+        <!-- Print watermark -->
+        <div class="print-watermark">
+            ResumeAI
+        </div>
+
+        {% if is_raw %}
+            <div class="alert alert-warning">
+                <p>The AI response couldn't be properly structured. Here is the raw analysis:</p>
+                <pre>{{ analysis }}</pre>
+            </div>
+        {% elif is_structured %}
+            <!-- Rating Card -->
+            <div class="row justify-content-center mb-4 animation-fade-in">
+                <div class="col-md-6 text-center">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">Resume Rating</h3>
+                            {% set rating_value = analysis.rating|replace('/10', '') %}
+                            {% set rating_num = rating_value|float %}
+                            {% if rating_num >= 8 %}
+                                <span class="rating-badge bg-success text-white">{{ analysis.rating }}</span>
+                                <p class="mt-2">Excellent Resume!</p>
+                            {% elif rating_num >= 6 %}
+                                <span class="rating-badge bg-info text-white">{{ analysis.rating }}</span>
+                                <p class="mt-2">Good Resume!</p>
+                            {% elif rating_num >= 4 %}
+                                <span class="rating-badge bg-warning text-dark">{{ analysis.rating }}</span>
+                                <p class="mt-2">Average Resume</p>
+                            {% else %}
+                                <span class="rating-badge bg-danger text-white">{{ analysis.rating }}</span>
+                                <p class="mt-2">Needs Improvement</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="row mb-4 animation-fade-in" style="animation-delay: 0.1s;">
+                <div class="col-12">
+                    <div class="card summary-card">
+                        <div class="card-header">
+                            <i class="fas fa-clipboard-check me-2"></i> Summary
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ analysis.summary }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Strengths Card -->
+                <div class="col-md-6 animation-fade-in" style="animation-delay: 0.2s;">
+                    <div class="card strength-card h-100">
+                        <div class="card-header">
+                            <i class="fas fa-trophy me-2"></i> Strengths
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for strength in analysis.strengths %}
+                                    <li class="list-group-item">{{ strength }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weaknesses Card -->
+                <div class="col-md-6 animation-fade-in" style="animation-delay: 0.3s;">
+                    <div class="card weakness-card h-100">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-circle me-2"></i> Areas to Address
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for weakness in analysis.weaknesses %}
+                                    <li class="list-group-item">{{ weakness }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Improvements Card -->
+            <div class="row mt-4 animation-fade-in" style="animation-delay: 0.4s;">
+                <div class="col-12">
+                    <div class="card improvement-card">
+                        <div class="card-header">
+                            <i class="fas fa-tasks me-2"></i> Recommendations for Improvement
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for improvement in analysis.areas_for_improvement %}
+                                    <li class="list-group-item">{{ improvement }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Legacy format handling -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card strength-card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-trophy me-2"></i> Strengths
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ sections.strengths|nl2br }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card weakness-card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-exclamation-circle me-2"></i> Weaknesses
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ sections.weaknesses|nl2br }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card improvement-card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-tasks me-2"></i> Areas for Improvement
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{ sections.mistakes|nl2br }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card summary-card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-star me-2"></i> Rating
+                        </div>
+                        <div class="card-body text-center">
+                            {% if rating %}
+                                <h2 class="card-text">
+                                    <span class="badge bg-{{ 'success' if rating >= 8 else 'info' if rating >= 6 else 'warning' if rating >= 4 else 'danger' }}">
+                                        {{ rating }}/10
+                                    </span>
+                                </h2>
+                            {% else %}
+                                <p class="card-text">{{ sections.rating }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Print-only footer -->
+        <div class="page-footer d-none d-print-block">
+            <p>Resume analysis powered by ResumeAI Analyzer - Confidential and proprietary</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date for print view
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('currentDate').textContent = formattedDate;
+            
+            // Print functionality
+            document.getElementById('printButton').addEventListener('click', function() {
+                window.print();
+            });
+            
+            // PDF download functionality
+            document.getElementById('downloadPdfButton').addEventListener('click', function() {
+                // Setup for PDF generation
+                const element = document.querySelector('.container');
+                const opt = {
+                    margin: 10,
+                    filename: 'Resume_Analysis_Report.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                // Add print-only elements temporarily for PDF
+                const printElements = document.querySelectorAll('.d-none.d-print-block');
+                printElements.forEach(el => el.classList.remove('d-none'));
+                
+                // Generate PDF
+                html2pdf().from(element).set(opt).save().then(() => {
+                    // Restore original state after PDF generation
+                    printElements.forEach(el => el.classList.add('d-none'));
+                });
+            });
+        });
+    </script>
+</body>
+</html>

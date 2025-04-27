@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrepPoint</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/homestyles.css') }}">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card-img-top {
+            height: 180px;
+            object-fit: cover;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.navbar-dark.bg-dark {
+    background: linear-gradient(90deg, #2c3e50, #1a2a3a) !important;
+}
+
+.navbar-dark.bg-primary {
+    background: linear-gradient(90deg, #3a7bd5, #4366e2) !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+.nav-link.active {
+    background-color: rgba(255,255,255,0.15);
+    border-radius: 4px;
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">PrepPoint</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/resume-analyzer">Resume Analyzer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/interview">Interview Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dsa-questions">DSA Practice</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4">PrepPoint</h1>
+            <p class="lead">Enhance your career journey with PrepPoint</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" class="card-img-top" alt="Resume Analysis">
+                    <div class="card-body">
+                        <h5 class="card-title">Resume Analyzer</h5>
+                        <p class="card-text">Upload your resume to get personalized feedback, strengths, weaknesses, and an overall rating to help improve your job application materials.</p>
+                        <a href="{{ url_for('resume_analyzer') }}" class="btn btn-primary">Analyze Resume</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" class="card-img-top" alt="Interview Practice">
+                    <div class="card-body">
+                        <h5 class="card-title">Interview Assistant</h5>
+                        <p class="card-text">Upload your resume to get detailed feedback on strengths, weaknesses, and areas for improvement. Our AI will analyze your resume and provide a comprehensive evaluation.</p>
+                        <a href="{{ url_for('interview') }}" class="btn btn-primary">Practice Interview</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" class="card-img-top" alt="DSA Practice">
+                    <div class="card-body">
+                        <h5 class="card-title">DSA Question Practice</h5>
+                        <p class="card-text">Practice data structures and algorithms questions with our AI code reviewer. Get instant feedback on your solutions to improve your problem-solving skills.</p>
+                        <a href="{{ url_for('dsa_questions') }}" class="btn btn-primary">Practice DSA</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Overview -->
+<div class="container my-5" id="features">
+    <h2 class="text-center mb-4">What PrepPoint Offers</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Resume Analyzer</h5>
+                    <p class="card-text">Upload your resume to receive AI-powered analysis highlighting key strengths, weaknesses, and suggestions for improvement using Gemini AI.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Interview Assistant</h5>
+                    <p class="card-text">Simulates real-time AI interview sessions using Groq's LLM. Receive tailored questions, follow-ups, and feedback based on your resume and responses.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <h5 class="card-title">DSA Practice</h5>
+                    <p class="card-text">Solve algorithm problems and receive immediate feedback. Improve coding patterns and problem-solving skills with our AI code reviewer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How it Works -->
+<div class="container my-5" id="how-it-works">
+    <h2 class="text-center mb-4">How It Works</h2>
+    <div class="row text-center">
+        <div class="col-md-3">
+            <h5>1. Sign Up</h5>
+            <p>Create an account to access all tools and save your progress.</p>
+        </div>
+        <div class="col-md-3">
+            <h5>2. Upload Resume</h5>
+            <p>Let our AI scan your resume to analyze strengths and highlight improvements.</p>
+        </div>
+        <div class="col-md-3">
+            <h5>3. Practice Interviews</h5>
+            <p>Simulate realistic interviews based on your domain and get performance insights.</p>
+        </div>
+        <div class="col-md-3">
+            <h5>4. Track Progress</h5>
+            <p>Access your dashboard to view analytics, mistakes, and next steps.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- Contact / FAQ CTA -->
+<div class="container my-5 text-center" id="contact">
+    <h2>Need Help or Have Questions?</h2>
+    <p class="mb-3">Check our <a href="#">FAQs</a> or <a href="#">contact support</a> for any inquiries.</p>
+    <a href="mailto:support@preppoint.ai" class="btn btn-outline-primary">Email Support</a>
+</div>
+
+
+    <footer class="bg-dark text-white mt-5 py-3">
+        <div class="container text-center">
+            <p>&copy; 2025 AI Career Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
