@@ -13,30 +13,27 @@ body {
 }
 
 .navbar-brand {
-    font-weight: 600;
-    font-size: 1.3rem;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
 }
 
 .navbar-dark.bg-dark {
     background: linear-gradient(90deg, #2c3e50, #1a2a3a) !important;
 }
 
-.navbar-dark.bg-primary {
-    background: linear-gradient(90deg, #3a7bd5, #4366e2) !important;
-}
-
-.nav-link {
+.navbar-nav .nav-link {
     font-weight: 500;
     padding: 0.5rem 1rem !important;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, border-radius 0.2s ease;
 }
 
-.nav-link:hover {
+.navbar-nav .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
 
-.nav-link.active {
+.navbar-nav .nav-link.active {
     background-color: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
 }
