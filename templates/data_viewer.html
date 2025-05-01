@@ -58,6 +58,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/dsa-questions">DSA Practice</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/aptitude-test">Apptitude Practice</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -115,6 +118,12 @@
             </div>
             <div class="col-md-3">
                 <div class="card stats-card">
+                    <h2>{{ apti_count|default(0) }}</h2>
+                    <p>Aptitude Tests</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
                     <h2>{{ profile_completion }}%</h2>
                     <p>Profile Completion</p>
                 </div>
@@ -159,6 +168,11 @@
                         DSA Submissions
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="aptitude-tab" data-bs-toggle="tab" data-bs-target="#aptitude-data" type="button" role="tab">
+                        Aptitude Test Results
+                    </button>
+                </li>
             </ul>
             
             <div class="tab-content" id="dataTabsContent">
@@ -200,6 +214,19 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Aptitude Test Results Tab -->
+<div class="tab-pane fade" id="aptitude-data" role="tabpanel">
+    <div id="aptitudeResultsList" class="aptitude-results-list">
+        <!-- Aptitude test result cards will be loaded here -->
+        <div class="text-center py-5" id="aptitudeLoader">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading aptitude test results...</p>
+        </div>
+    </div>
+</div>
             </div>
         </div>
     
@@ -256,6 +283,23 @@
                 </div>
             </div>
         </div>
+        <!-- Aptitude Test View Modal -->
+<div class="modal fade" id="aptitudeResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Aptitude Test Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="aptitudeResultModalBody">
+                <!-- Aptitude test details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <footer class="bg-dark text-white py-3">
         <div class="container text-center">
@@ -267,19 +311,21 @@
     <script>
         // Fetch data from the API endpoints
         document.addEventListener('DOMContentLoaded', function() {
-            fetchResumeData();
-            fetchTranscriptData();
-            fetchDsaSubmissionData();
-            
-            document.getElementById('refreshData').addEventListener('click', function() {
-                fetchResumeData();
-                fetchTranscriptData();
-                fetchDsaSubmissionData();
-            });
-            
-            document.getElementById('searchInput').addEventListener('input', filterData);
-            document.getElementById('dateFilter').addEventListener('change', filterData);
-        });
+    fetchResumeData();
+    fetchTranscriptData();
+    fetchDsaSubmissionData();
+    fetchAptitudeResultsData(); // Add this line
+    
+    document.getElementById('refreshData').addEventListener('click', function() {
+        fetchResumeData();
+        fetchTranscriptData();
+        fetchDsaSubmissionData();
+        fetchAptitudeResultsData(); // Add this line
+    });
+    
+    document.getElementById('searchInput').addEventListener('input', filterData);
+    document.getElementById('dateFilter').addEventListener('change', filterData);
+});
         
         function fetchResumeData() {
             document.getElementById('resumeLoader').style.display = 'block';
@@ -325,6 +371,21 @@
                     document.getElementById('dsaSubmissionsList').innerHTML = '<div class="alert alert-danger">Error loading DSA submission data. Please try again.</div>';
                 });
         }
+
+        function fetchAptitudeResultsData() {
+    document.getElementById('aptitudeLoader').style.display = 'block';
+    fetch('/api/aptitude-results')
+        .then(response => response.json())
+        .then(data => {
+            displayAptitudeResultsData(data);
+            document.getElementById('aptitudeLoader').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error fetching aptitude results data:', error);
+            document.getElementById('aptitudeLoader').style.display = 'none';
+            document.getElementById('aptitudeResultsList').innerHTML = '<div class="alert alert-danger">Error loading aptitude results data. Please try again.</div>';
+        });
+}
 
         
         function displayResumeData(resumes) {
@@ -459,6 +520,53 @@
                 });
             });
         }
+
+        function displayAptitudeResultsData(results) {
+    const resultsList = document.getElementById('aptitudeResultsList');
+    resultsList.innerHTML = '';
+    
+    if (!results || results.length === 0) {
+        resultsList.innerHTML = '<div class="alert alert-info">No aptitude test results found.</div>';
+        return;
+    }
+    
+    results.forEach(result => {
+        const card = document.createElement('div');
+        card.className = 'card aptitude-card';
+        card.dataset.date = result.date;
+        
+        // Calculate score class
+        let scoreClass = 'text-danger';
+        if (result.score_percentage >= 70) {
+            scoreClass = 'text-success';
+        } else if (result.score_percentage >= 50) {
+            scoreClass = 'text-warning';
+        }
+        
+        card.innerHTML = `
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Aptitude Test</span>
+                <span class="badge bg-primary ${scoreClass}">${result.score_percentage.toFixed(1)}%</span>
+            </div>
+            <div class="card-body">
+                <p class="timestamp">Taken on ${new Date(result.date).toLocaleString()}</p>
+                <p>Completed in ${result.time_taken_str} | ${result.answered_questions}/${result.total_questions} questions answered</p>
+                <button class="btn btn-sm btn-primary view-aptitude-details" data-result-id="${result._id}">View Full Results</button>
+            </div>
+        `;
+        
+        resultsList.appendChild(card);
+    });
+    
+    // Add event listeners to the view buttons
+    document.querySelectorAll('.view-aptitude-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const resultId = this.dataset.resultId;
+            const result = results.find(r => r._id === resultId);
+            showAptitudeResultDetails(result);
+        });
+    });
+}
         
         function showResumeDetails(resume) {
             const modalBody = document.getElementById('resumeModalBody');
@@ -639,44 +747,162 @@
             const submissionModal = new bootstrap.Modal(document.getElementById('dsaSubmissionModal'));
             submissionModal.show();
         }
+
+        function showAptitudeResultDetails(result) {
+    const modalBody = document.getElementById('aptitudeResultModalBody');
+    modalBody.innerHTML = '';
+    
+    if (!result) {
+        modalBody.innerHTML = '<div class="alert alert-warning">No data available for this test result.</div>';
+        return;
+    }
+    
+    // Create difficulty performance chart
+    const difficultyHtml = Object.entries(result.difficulty_stats).map(([difficulty, stats]) => {
+        const performanceClass = stats.percentage >= 70 ? 'bg-success' : 
+                              stats.percentage >= 50 ? 'bg-warning' : 'bg-danger';
         
-        function filterData() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const dateFilter = document.getElementById('dateFilter').value;
+        return `
+            <div class="mb-2">
+                <div class="d-flex justify-content-between">
+                    <span>${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} Questions</span>
+                    <span>${stats.correct}/${stats.total} (${stats.percentage.toFixed(1)}%)</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar ${performanceClass}" role="progressbar" 
+                         style="width: ${stats.percentage}%" aria-valuenow="${stats.percentage}" 
+                         aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Create overall performance summary
+    modalBody.innerHTML = `
+        <div class="result-summary mb-4">
+            <h4>Test Results</h4>
+            <p class="timestamp">Taken on ${new Date(result.date).toLocaleString()}</p>
             
-            // Filter resume cards
-            document.querySelectorAll('.resume-card').forEach(card => {
-                const candidateName = card.dataset.candidateName;
-                const date = new Date(card.dataset.date);
-                
-                const matchesSearch = !searchTerm || candidateName.includes(searchTerm);
-                const matchesDate = dateMatchesFilter(date, dateFilter);
-                
-                card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
-            });
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Score</h5>
+                            <h2 class="${result.score_percentage >= 70 ? 'text-success' : 
+                                      result.score_percentage >= 50 ? 'text-warning' : 'text-danger'}">
+                                ${result.score_percentage.toFixed(1)}%
+                            </h2>
+                            <p>${result.correct_answers} out of ${result.total_questions} correct</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Time</h5>
+                            <h2>${result.time_taken_str}</h2>
+                            <p>Completion: ${result.completion_percentage.toFixed(1)}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            // Filter transcript cards
-            document.querySelectorAll('.transcript-card').forEach(card => {
-                const candidateName = card.dataset.candidateName;
-                const date = new Date(card.dataset.date);
-                
-                const matchesSearch = !searchTerm || candidateName.includes(searchTerm);
-                const matchesDate = dateMatchesFilter(date, dateFilter);
-                
-                card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
-            });
-            
-            // Filter DSA submission cards
-            document.querySelectorAll('.submission-card').forEach(card => {
-                const questionTitle = card.dataset.questionTitle;
-                const date = new Date(card.dataset.date);
-                
-                const matchesSearch = !searchTerm || questionTitle.includes(searchTerm);
-                const matchesDate = dateMatchesFilter(date, dateFilter);
-                
-                card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
-            });
-        }
+            <h5 class="mt-4">Performance by Difficulty</h5>
+            ${difficultyHtml}
+        </div>
+        
+        <div class="question-results mt-4">
+            <h5>Question Details</h5>
+            <div class="accordion" id="questionAccordion">
+                ${result.question_results.map((qr, index) => `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed ${qr.is_correct ? 'bg-success bg-opacity-10' : 
+                                                                      qr.user_answer ? 'bg-danger bg-opacity-10' : 
+                                                                      'bg-warning bg-opacity-10'}" 
+                                    type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#question${index}">
+                                <div class="d-flex justify-content-between w-100">
+                                    <span>Question ${index + 1} (${qr.difficulty})</span>
+                                    <span class="badge ${qr.is_correct ? 'bg-success' : 
+                                                     qr.user_answer ? 'bg-danger' : 
+                                                     'bg-warning'}">
+                                        ${qr.is_correct ? 'Correct' : qr.user_answer ? 'Incorrect' : 'Unanswered'}
+                                    </span>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="question${index}" class="accordion-collapse collapse" 
+                             data-bs-parent="#questionAccordion">
+                            <div class="accordion-body">
+                                <p>${qr.question}</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Your Answer:</strong> ${qr.user_answer || 'Not answered'}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Correct Answer:</strong> ${qr.correct_answer}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    const aptitudeModal = new bootstrap.Modal(document.getElementById('aptitudeResultModal'));
+    aptitudeModal.show();
+}
+        
+function filterData() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    // Filter resume cards
+    document.querySelectorAll('.resume-card').forEach(card => {
+        const candidateName = card.dataset.candidateName;
+        const date = new Date(card.dataset.date);
+        
+        const matchesSearch = !searchTerm || candidateName.includes(searchTerm);
+        const matchesDate = dateMatchesFilter(date, dateFilter);
+        
+        card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
+    });
+    
+    // Filter transcript cards
+    document.querySelectorAll('.transcript-card').forEach(card => {
+        const candidateName = card.dataset.candidateName;
+        const date = new Date(card.dataset.date);
+        
+        const matchesSearch = !searchTerm || candidateName.includes(searchTerm);
+        const matchesDate = dateMatchesFilter(date, dateFilter);
+        
+        card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
+    });
+    
+    // Filter DSA submission cards
+    document.querySelectorAll('.submission-card').forEach(card => {
+        const questionTitle = card.dataset.questionTitle;
+        const date = new Date(card.dataset.date);
+        
+        const matchesSearch = !searchTerm || questionTitle.includes(searchTerm);
+        const matchesDate = dateMatchesFilter(date, dateFilter);
+        
+        card.style.display = matchesSearch && matchesDate ? 'block' : 'none';
+    });
+    
+    // Filter aptitude test cards
+    document.querySelectorAll('.aptitude-card').forEach(card => {
+        const date = new Date(card.dataset.date);
+        
+        // Aptitude tests don't have a name to search by, so only filter by date
+        const matchesDate = dateMatchesFilter(date, dateFilter);
+        
+        card.style.display = matchesDate ? 'block' : 'none';
+    });
+}
         
         function dateMatchesFilter(date, filter) {
             if (filter === 'all') return true;

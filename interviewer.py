@@ -202,18 +202,6 @@ def admin_redirect():
     else:
         return redirect(url_for('admin.admin_login'))
 
-@app.route('/dsa-practice', methods=['GET'])
-@login_required
-def dsa_practice():
-    """Route for DSA practice tool"""
-    # Get a random question from MongoDB to start with
-    random_question = db.dsa_questions.aggregate([{ "$sample": { "size": 1 } }])
-    first_question = list(random_question)
-    
-    # Pass the question to the template if one was found
-    initial_question = first_question[0] if first_question else None
-    
-    return render_template('dsa_practice.html', initial_question=initial_question)
 
 # API route to get a random DSA question by difficulty
 @app.route('/api/dsa-submissions')
@@ -260,33 +248,42 @@ def analyze_solution():
         return jsonify({"error": "Question not found"}), 404
     
     # Get the correct solution for comparison
-    correct_solution = question.get('solution', '')
-    problem_statement = question.get('problem', '')
+    correct_solution = question.get('answer', '')
+    problem_statement = question.get('question', '')
     
     # Create prompt for the AI to analyze the solution
     prompt = f"""
-    You are a DSA expert reviewer. Compare the user's solution to the correct solution for this DSA problem.
-    
-    Problem: {problem_statement}
-    
-    Correct solution:
-    ```
-    {correct_solution}
-    ```
-    
-    User's solution:
-    ```
-    {user_solution}
-    ```
-    
-    Please analyze the user's solution and provide feedback on:
-    1. Correctness (does it solve the problem correctly?)
-    2. Time complexity (compared to the ideal solution)
-    3. Space complexity (compared to the ideal solution)
-    4. Code quality and readability
-    5. Potential improvements
-    
-    Be specific and constructive in your feedback. If the user's solution is far off, provide hints rather than the full solution.
+    You are a DSA expert reviewing a user's solution.
+
+Given the problem, a correct reference solution, and the user's solution, perform a detailed comparative analysis.
+
+Problem:
+{problem_statement}
+
+Correct Solution:
+{correct_solution}
+
+User's Solution:
+{user_solution}
+
+Please evaluate the user's solution based on the following criteria:
+
+1.Correctness — Does the solution produce correct results for all cases, including edge cases?
+2.Time Complexity — Is the time efficiency optimal or close to the reference solution?
+3.Space Complexity — Is the memory usage minimal and justified compared to the correct approach?
+4.Code Quality and Readability — Is the code clean, well-structured, and easy to understand?
+5.Potential Improvements — Suggest specific logical, performance, or stylistic improvements.
+
+Feedback Formatting Instructions:
+
+Use green tick icons to bullet each point in your feedback.
+Strictly dont involve any *, #, **, etc formatting or any other things in response.
+Bold the main point of each bullet (e.g., Correctness, Time Complexity).
+Avoid using asterisks, hashes, or markdown characters in your output.
+Keep the tone constructive and specific.
+If the user’s solution is incorrect or suboptimal, provide helpful hints or suggestions without giving away the complete correct solution.
+Present the feedback in a clean, professional, and readable format suitable for learners.
+
     """
     
     # Send to Groq for analysis
@@ -393,6 +390,18 @@ def dashboard():
                           dsa_count=dsa_count,
                           apti_count=apti_count,
                           profile_completion=profile_completion)
+
+@app.route('/api/aptitude-results', methods=['GET'])
+@login_required
+def get_aptitude_results():
+    user_id = session.get('user_id')
+    results = list(db.aptitude_results.find({'user_id': user_id}).sort('date', -1))
+    
+    # Convert ObjectId to string for JSON serialization
+    for result in results:
+        result['_id'] = str(result['_id'])
+        
+    return jsonify(results)
 
 # Routes for project 1 (Resume Analyzer)
 @app.route('/resume-analyzer', methods=['GET', 'POST'])
