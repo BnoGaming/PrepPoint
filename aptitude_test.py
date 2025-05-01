@@ -88,7 +88,12 @@ def start_test():
         test_questions.append({
             'id': str(q['_id']),
             'question': q['questions'],
-            'options': [q['1'], q['2'], q['3'], q['4']],
+            'options': {
+                'A': q.get('A', ''),
+                'B': q.get('B', ''),
+                'C': q.get('C', ''),
+                'D': q.get('D', '')
+            },
             'difficulty': q['difficulty'],
             'correct_answer': q['answer'].strip()
         })
@@ -270,7 +275,24 @@ def test_results(result_id):
         flash('Result not found or you do not have permission to view it', 'danger')
         return redirect(url_for('dashboard'))
     
-    return render_template('aptitude_results.html', result=result)
+    # Calculate counts for tab display
+    correct_count = 0
+    incorrect_count = 0
+    unanswered_count = 0
+    
+    for qresult in result['question_results']:
+        if qresult.get('is_correct'):
+            correct_count += 1
+        elif qresult.get('user_answer'):
+            incorrect_count += 1
+        else:
+            unanswered_count += 1
+    
+    return render_template('aptitude_results.html', 
+                          result=result, 
+                          correct_count=correct_count,
+                          incorrect_count=incorrect_count,
+                          unanswered_count=unanswered_count)
 
 @aptitude_bp.route('/aptitude-history')
 @login_required

@@ -40,36 +40,106 @@
             border-left-color: #dc3545;
         }
         .hero-section {
-            background-color: #0d6efd;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
             color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
+            padding: 4rem 0;
+            margin-bottom: 2rem;
         }
+        .option-badge {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        .option-badge-A {
+            background-color: #007bff;
+            color: white;
+        }
+        .option-badge-B {
+            background-color: #28a745;
+            color: white;
+        }
+        .option-badge-C {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .option-badge-D {
+            background-color: #dc3545;
+            color: white;
+        }
+        .navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.navbar-dark.bg-dark {
+    background: linear-gradient(90deg, #2c3e50, #1a2a3a) !important;
+}
+
+.navbar-dark.bg-primary {
+    background: linear-gradient(90deg, #3a7bd5, #4366e2) !important;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+.nav-link.active {
+    background-color: rgba(255,255,255,0.15);
+    border-radius: 4px;
+}
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="/">AI Career Tools</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/resume-analyzer">Resume Analyzer</a></li>
-                <li class="nav-item"><a class="nav-link" href="/interview">Interview Assistant</a></li>
-                <li class="nav-item"><a class="nav-link" href="/dsa-practice">DSA Practice</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/aptitude-test">Aptitude Test</a></li>
-                <li class="nav-item"><a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/auth/profile">Profile</a></li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">PrepPoint</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/resume-analyzer">Resume Analyzer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/interview">Interview Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dsa-questions">DSA Practice</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/aptitude-test">Aptitude Practice</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
 <div class="hero-section">
     <div class="container">
@@ -96,13 +166,13 @@
         </div>
         <div class="card-body">
             <div class="text-center mb-4">
-                <h3>Your Score: {{ result.score_percentage|round(1) }}%</h3>
-                <div class="progress" style="height: 25px;">
-                    <div class="progress-bar" role="progressbar" style="width: {{ result.score_percentage }}%;" 
-                         aria-valuenow="{{ result.score_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
+                {% if result and result.score_percentage is not none %}
+                    <h3>Your Score: {{ result.score_percentage|round(1) }}%</h3>
+                    </div>
+                {% else %}
+                    <h3>Score not available.</h3>
+                {% endif %}
             </div>
-
             <div class="row">
                 <div class="col-md-4">
                     <div class="stats-card">
@@ -120,57 +190,6 @@
                     <div class="stats-card">
                         <h5>Correct Answers</h5>
                         <h3>{{ result.correct_answers }}</h3>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header">Performance by Difficulty Level</div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <h6><span class="badge badge-easy text-white">Easy</span></h6>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-success" role="progressbar" 
-                                         style="width: {{ result.difficulty_stats.easy.percentage }}%;" 
-                                         aria-valuenow="{{ result.difficulty_stats.easy.percentage }}" 
-                                         aria-valuemin="0" aria-valuemax="100">
-                                        {{ result.difficulty_stats.easy.percentage|round(1) }}%
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <h6><span class="badge badge-medium">Medium</span></h6>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-warning" role="progressbar" 
-                                         style="width: {{ result.difficulty_stats.medium.percentage }}%;" 
-                                         aria-valuenow="{{ result.difficulty_stats.medium.percentage }}" 
-                                         aria-valuemin="0" aria-valuemax="100">
-                                        {{ result.difficulty_stats.medium.percentage|round(1) }}%
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <h6><span class="badge badge-hard text-white">Hard</span></h6>
-                                <div class="progress" style="height: 20px;">
-                                    <div class="progress-bar bg-danger" role="progressbar" 
-                                         style="width: {{ result.difficulty_stats.hard.percentage }}%;" 
-                                         aria-valuenow="{{ result.difficulty_stats.hard.percentage }}" 
-                                         aria-valuemin="0" aria-valuemax="100">
-                                        {{ result.difficulty_stats.hard.percentage|round(1) }}%
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">Questions by Difficulty</div>
-                        <div class="card-body chart-container">
-                            <canvas id="difficulty-chart"></canvas>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -205,11 +224,11 @@
                         </div>
                         <p>{{ qresult.question }}</p>
                         {% if qresult.user_answer %}
-                        <p><strong>Your Answer:</strong> {{ qresult.user_answer }}</p>
+                        <p><strong>Your Answer:</strong> <span class="option-badge option-badge-{{ qresult.user_answer }}">{{ qresult.user_answer }}</span></p>
                         {% else %}
                         <p><strong>Not answered</strong></p>
                         {% endif %}
-                        <p><strong>Correct Answer:</strong> {{ qresult.correct_answer }}</p>
+                        <p><strong>Correct Answer:</strong> <span class="option-badge option-badge-{{ qresult.correct_answer }}">{{ qresult.correct_answer }}</span></p>
                     </div>
                     {% endfor %}
                 </div>
@@ -223,8 +242,8 @@
                             <span class="badge {% if qresult.difficulty == 'easy' %}badge-easy text-white{% elif qresult.difficulty == 'medium' %}badge-medium{% else %}badge-hard text-white{% endif %}">{{ qresult.difficulty|capitalize }}</span>
                         </div>
                         <p>{{ qresult.question }}</p>
-                        <p><strong>Your Answer:</strong> {{ qresult.user_answer }}</p>
-                        <p><strong>Correct Answer:</strong> {{ qresult.correct_answer }}</p>
+                        <p><strong>Your Answer:</strong> <span class="option-badge option-badge-{{ qresult.user_answer }}">{{ qresult.user_answer }}</span></p>
+                        <p><strong>Correct Answer:</strong> <span class="option-badge option-badge-{{ qresult.correct_answer }}">{{ qresult.correct_answer }}</span></p>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -242,8 +261,8 @@
                             <span class="badge {% if qresult.difficulty == 'easy' %}badge-easy text-white{% elif qresult.difficulty == 'medium' %}badge-medium{% else %}badge-hard text-white{% endif %}">{{ qresult.difficulty|capitalize }}</span>
                         </div>
                         <p>{{ qresult.question }}</p>
-                        <p><strong>Your Answer:</strong> {{ qresult.user_answer }}</p>
-                        <p><strong>Correct Answer:</strong> {{ qresult.correct_answer }}</p>
+                        <p><strong>Your Answer:</strong> <span class="option-badge option-badge-{{ qresult.user_answer }}">{{ qresult.user_answer }}</span></p>
+                        <p><strong>Correct Answer:</strong> <span class="option-badge option-badge-{{ qresult.correct_answer }}">{{ qresult.correct_answer }}</span></p>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -262,7 +281,7 @@
                         </div>
                         <p>{{ qresult.question }}</p>
                         <p><strong>Not answered</strong></p>
-                        <p><strong>Correct Answer:</strong> {{ qresult.correct_answer }}</p>
+                        <p><strong>Correct Answer:</strong> <span class="option-badge option-badge-{{ qresult.correct_answer }}">{{ qresult.correct_answer }}</span></p>
                     </div>
                     {% endif %}
                     {% endfor %}
@@ -288,39 +307,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Create difficulty pie chart
-        const difficultyCtx = document.getElementById('difficulty-chart').getContext('2d');
-        
-        new Chart(difficultyCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Easy', 'Medium', 'Hard'],
-                datasets: [{
-                    data: [
-                        {{ result.difficulty_stats.easy.total }},
-                        {{ result.difficulty_stats.medium.total }},
-                        {{ result.difficulty_stats.hard.total }}
-                    ],
-                    backgroundColor: [
-                        '#28a745',  // green for easy
-                        '#ffc107',  // yellow for medium
-                        '#dc3545'   // red for hard
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    });
-</script>
 </body>
 </html>

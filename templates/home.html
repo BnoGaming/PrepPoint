@@ -86,12 +86,16 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/dsa-questions">DSA Practice</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/aptitude-test">Apptitude Practice</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a>
                     </li>
                 </ul>
+                
             </div>
         </div>
     </nav>
@@ -136,8 +140,20 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <img src="https://connect-assets.prosple.com/cdn/ff/gn0W1k7lmLVSKcTC23exwR3Qx2OFyjU1y-YBdLjnYiQ/1642018623/public/styles/scale_890_no_upsize/public/2022-01/math-5247958_1280.jpg?itok=VpVzuUb7" class="card-img-top" alt="DSA Practice">
+                    <div class="card-body">
+                        <h5 class="card-title">Apptitude Question Practice</h5>
+                        <p class="card-text">Sharpen your coding skills by solving aptitude questions with real-time feedback and performance tracking through our intelligent test system.</p>
+                        <a href="{{ url_for('aptitude_test') }}" class="btn btn-primary">Practice Aptitude</a>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
+
 
     <!-- Features Overview -->
 <div class="container my-5" id="features">

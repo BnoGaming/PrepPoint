@@ -55,7 +55,7 @@ os.makedirs('static', exist_ok=True)
 
 # Initialize Groq client
 load_dotenv()
-client = groq.Client(api_key=os.getenv("GROQ_API_KEY"))
+client = groq.Client(api_key="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")
 
 # MongoDB connection
 mongo_client = MongoClient('mongodb://localhost:27017/')
@@ -312,6 +312,10 @@ def analyze_solution():
         return jsonify({"error": str(e)}), 500
 
 # Add route to view past submissions
+@app.route('/aptitude-test', methods=['GET'])
+def aptitude_test():
+    return render_template('aptitude_test.html')  # Make sure this template exists
+
 @app.route('/dsa-submissions')
 @login_required
 def dsa_submissions():
