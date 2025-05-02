@@ -231,12 +231,26 @@ def api_dsa_submissions():
     return jsonify(submissions)
 
 # API route to analyze user's solution
+# API route to analyze user's solution
 @app.route('/api/analyze-solution', methods=['POST'])
 @login_required
 def analyze_solution():
     data = request.json
-    user_solution = data.get('solution', '')
+    user_solution = data.get('solution', '').strip()
     question_id = data.get('question_id', '')
+    
+    # Check if solution is empty
+    if not user_solution:
+        # Save an empty submission record
+        submission_record = {
+            "user_id": session.get('user_id'),
+            "question_id": question_id,
+            "user_solution": "",
+            "analysis": "No solution provided",
+            "date": datetime.now()
+        }
+        db.dsa_submissions.insert_one(submission_record)
+        return jsonify({"analysis": "No solution provided"})
     
     # Get the question from MongoDB
     try:
@@ -268,22 +282,18 @@ User's Solution:
 
 Please evaluate the user's solution based on the following criteria:
 
-1.Correctness — Does the solution produce correct results for all cases, including edge cases?
-2.Time Complexity — Is the time efficiency optimal or close to the reference solution?
-3.Space Complexity — Is the memory usage minimal and justified compared to the correct approach?
-4.Code Quality and Readability — Is the code clean, well-structured, and easy to understand?
-5.Potential Improvements — Suggest specific logical, performance, or stylistic improvements.
+1. Correctness — Does the solution produce correct results for all cases, including edge cases?
+2. Time Complexity — Is the time efficiency optimal or close to the reference solution?
+3. Space Complexity — Is the memory usage minimal and justified compared to the correct approach?
+4. Code Quality and Readability — Is the code clean, well-structured, and easy to understand?
+5. Potential Improvements — Suggest specific logical, performance, or stylistic improvements.
 
 Feedback Formatting Instructions:
-
-Use green tick icons to bullet each point in your feedback.
-Strictly dont involve any *, #, **, etc formatting or any other things in response.
-Bold the main point of each bullet (e.g., Correctness, Time Complexity).
-Avoid using asterisks, hashes, or markdown characters in your output.
-Keep the tone constructive and specific.
-If the user’s solution is incorrect or suboptimal, provide helpful hints or suggestions without giving away the complete correct solution.
-Present the feedback in a clean, professional, and readable format suitable for learners.
-
+- Please use the following format for each criterion: "✓ [Criterion Name] — [Your analysis]"
+- Each criterion should be on its own line/paragraph
+- Keep the tone constructive and specific
+- If the user's solution is incorrect or suboptimal, provide helpful hints without giving away the complete solution
+- Be specific in your feedback
     """
     
     # Send to Groq for analysis

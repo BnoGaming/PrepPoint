@@ -336,6 +336,7 @@ body {
 /* Loading animation */
 .loading {
     text-align: center;
+    display: none;
     margin-top: 20px;
 }
 

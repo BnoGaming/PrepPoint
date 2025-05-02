@@ -15,34 +15,50 @@ mongo_client = MongoClient('mongodb://localhost:27017/')
 db = mongo_client['interview_app']
 aptitude_questions = db['apti_question']
 aptitude_results = db['aptitude_results']
+active_tests = db['active_tests']  # New collection to store active tests
 
 @aptitude_bp.route('/aptitude-test', methods=['GET'])
 @login_required
 def aptitude_test():
     """Display aptitude test page with questions"""
-    test_started = 'aptitude_test_questions' in session
-    current_question = session.get('current_question', 1)
+    user_id = session.get('user_id')
+    test_id = session.get('active_test_id')
+    test_started = test_id is not None
     
     # Default values
     questions = []
     user_answers = {}
+    current_question = 1
     progress = 0
     time_remaining = "30:00"
     
     if test_started:
-        questions = session.get('aptitude_test_questions', [])
-        user_answers = session.get('aptitude_answers', {})
+        # Fetch test data from database instead of session
+        active_test = active_tests.find_one({'_id': ObjectId(test_id), 'user_id': user_id})
         
-        # Calculate progress
-        progress = (current_question / len(questions)) * 100 if questions else 0
-        
-        # Calculate time remaining
-        start_time = datetime.fromisoformat(session.get('aptitude_start_time'))
-        elapsed_seconds = (datetime.now() - start_time).total_seconds()
-        remaining_seconds = max(0, (30 * 60) - elapsed_seconds)  # 30 minutes in seconds
-        minutes = int(remaining_seconds // 60)
-        seconds = int(remaining_seconds % 60)
-        time_remaining = f"{minutes:02d}:{seconds:02d}"
+        if active_test:
+            questions = active_test.get('questions', [])
+            user_answers = active_test.get('user_answers', {})
+            current_question = session.get('current_question', 1)
+            
+            # Calculate progress
+            progress = (current_question / len(questions)) * 100 if questions else 0
+            
+            # Calculate time remaining
+            start_time = active_test.get('start_time')
+            if start_time:
+                elapsed_seconds = (datetime.now() - start_time).total_seconds()
+                remaining_seconds = max(0, (30 * 60) - elapsed_seconds)  # 30 minutes in seconds
+                minutes = int(remaining_seconds // 60)
+                seconds = int(remaining_seconds % 60)
+                time_remaining = f"{minutes:02d}:{seconds:02d}"
+        else:
+            # If test not found, clear session
+            if 'active_test_id' in session:
+                del session['active_test_id']
+            if 'current_question' in session:
+                del session['current_question']
+            test_started = False
     
     return render_template(
         'aptitude_test.html', 
@@ -58,13 +74,17 @@ def aptitude_test():
 @login_required
 def start_test():
     """Initialize the aptitude test"""
+    user_id = session.get('user_id')
+    
     # Clear any existing test session
-    if 'aptitude_test_questions' in session:
-        del session['aptitude_test_questions']
-    if 'aptitude_start_time' in session:
-        del session['aptitude_start_time']
-    if 'aptitude_answers' in session:
-        del session['aptitude_answers']
+    if 'active_test_id' in session:
+        # Delete the previous test from database
+        old_test_id = session['active_test_id']
+        active_tests.delete_one({'_id': ObjectId(old_test_id), 'user_id': user_id})
+        del session['active_test_id']
+    
+    if 'current_question' in session:
+        del session['current_question']
     
     # Get questions by difficulty
     easy_questions = list(aptitude_questions.find({"difficulty": "easy"}).limit(20))
@@ -82,7 +102,7 @@ def start_test():
     # Shuffle questions to mix difficulties
     random.shuffle(selected_questions)
     
-    # Store question IDs and correct answers in session
+    # Prepare question data
     test_questions = []
     for q in selected_questions:
         test_questions.append({
@@ -98,10 +118,20 @@ def start_test():
             'correct_answer': q['answer'].strip()
         })
     
-    # Initialize session variables
-    session['aptitude_test_questions'] = test_questions
-    session['aptitude_start_time'] = datetime.now().isoformat()
-    session['aptitude_answers'] = {}
+    # Store test data in database instead of session
+    test_data = {
+        'user_id': user_id,
+        'start_time': datetime.now(),
+        'questions': test_questions,
+        'user_answers': {},
+        'created_at': datetime.now()
+    }
+    
+    # Insert into database and get the ID
+    test_id = active_tests.insert_one(test_data).inserted_id
+    
+    # Store only the test ID in session
+    session['active_test_id'] = str(test_id)
     session['current_question'] = 1
     
     return redirect(url_for('aptitude.aptitude_test'))
@@ -110,6 +140,12 @@ def start_test():
 @login_required
 def submit_answer():
     """Handle individual answer submissions during the test"""
+    user_id = session.get('user_id')
+    test_id = session.get('active_test_id')
+    
+    if not test_id:
+        return jsonify({'status': 'error', 'message': 'No active test found'}), 400
+    
     data = request.json
     question_id = data.get('question_id')
     answer = data.get('answer')
@@ -118,13 +154,11 @@ def submit_answer():
     if not question_id or not answer:
         return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
     
-    # Store answer in session
-    if 'aptitude_answers' not in session:
-        session['aptitude_answers'] = {}
-    
-    answers = session['aptitude_answers']
-    answers[question_id] = answer
-    session['aptitude_answers'] = answers
+    # Update the answer in the database
+    active_tests.update_one(
+        {'_id': ObjectId(test_id), 'user_id': user_id},
+        {'$set': {f'user_answers.{question_id}': answer}}
+    )
     
     return jsonify({'status': 'success'})
 
@@ -134,7 +168,19 @@ def navigate():
     """Handle navigation between questions"""
     current = session.get('current_question', 1)
     direction = int(request.form.get('direction', 0))
-    total_questions = len(session.get('aptitude_test_questions', []))
+    
+    user_id = session.get('user_id')
+    test_id = session.get('active_test_id')
+    
+    if not test_id:
+        return redirect(url_for('aptitude.aptitude_test'))
+    
+    # Get test data to determine total questions
+    test_data = active_tests.find_one({'_id': ObjectId(test_id), 'user_id': user_id})
+    if not test_data:
+        return redirect(url_for('aptitude.aptitude_test'))
+    
+    total_questions = len(test_data.get('questions', []))
     
     # Calculate new question number
     new_question = current + direction
@@ -152,14 +198,23 @@ def navigate():
 @login_required
 def submit_test():
     """Handle final test submission and calculate results"""
-    # Get questions and answers from session
-    questions = session.get('aptitude_test_questions', [])
-    user_answers = session.get('aptitude_answers', {})
-    start_time = session.get('aptitude_start_time')
+    user_id = session.get('user_id')
+    test_id = session.get('active_test_id')
     
-    if not questions or not start_time:
+    if not test_id:
+        flash('No active test found', 'danger')
+        return redirect(url_for('aptitude.aptitude_test'))
+    
+    # Get test data from database
+    test_data = active_tests.find_one({'_id': ObjectId(test_id), 'user_id': user_id})
+    
+    if not test_data:
         flash('Test session expired or not found', 'danger')
         return redirect(url_for('aptitude.aptitude_test'))
+    
+    questions = test_data.get('questions', [])
+    user_answers = test_data.get('user_answers', {})
+    start_time = test_data.get('start_time')
     
     # Calculate score and statistics
     total_questions = len(questions)
@@ -211,9 +266,8 @@ def submit_test():
     
     # Calculate time taken
     try:
-        start_datetime = datetime.fromisoformat(start_time)
         end_datetime = datetime.now()
-        time_taken_seconds = (end_datetime - start_datetime).total_seconds()
+        time_taken_seconds = (end_datetime - start_time).total_seconds()
         time_taken_minutes = time_taken_seconds / 60
         
         # Format time taken string
@@ -226,7 +280,7 @@ def submit_test():
     
     # Create result document for database
     result_doc = {
-        'user_id': session.get('user_id'),
+        'user_id': user_id,
         'date': datetime.now(),
         'total_questions': total_questions,
         'answered_questions': answered_questions,
@@ -242,16 +296,12 @@ def submit_test():
     # Store result in MongoDB
     result_id = aptitude_results.insert_one(result_doc).inserted_id
     
-    # Store result ID in session for redirect
-    session['last_aptitude_result_id'] = str(result_id)
+    # Clean up - remove the active test
+    active_tests.delete_one({'_id': ObjectId(test_id), 'user_id': user_id})
     
     # Clear test data from session
-    if 'aptitude_test_questions' in session:
-        del session['aptitude_test_questions']
-    if 'aptitude_start_time' in session:
-        del session['aptitude_start_time']
-    if 'aptitude_answers' in session:
-        del session['aptitude_answers']
+    if 'active_test_id' in session:
+        del session['active_test_id']
     if 'current_question' in session:
         del session['current_question']
     

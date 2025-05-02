@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/mode/python/python.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
         body {
@@ -110,18 +109,30 @@
             margin-top: 20px;
             border-left: 5px solid #3498db;
             border-radius: 6px;
-        
         }
         #analysis-container {
-    transition: all 0.3s ease-in-out;
-}
-
+            transition: all 0.3s ease-in-out;
+        }
+        .analysis-criteria {
+            margin-bottom: 10px;
+        }
+        .analysis-criteria .criteria-title {
+            font-weight: bold;
+        }
+        .tick-icon {
+            color: #28a745;
+            margin-right: 8px;
+        }
+        .no-solution {
+            color: #dc3545;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">AI Career Tools</a>
+            <a class="navbar-brand" href="/">PrepPoint</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -137,15 +148,15 @@
                         <a class="nav-link" href="/interview">Interview Assistant</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/dsa-practice">DSA Practice</a>
+                        <a class="nav-link" href="/dsa-questions">DSA Practice</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/data-viewer">Profile</a>
+                        <a class="nav-link" href="/aptitude-test">Apptitude Practice</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">My Dashboard</a>
+                        <a class="nav-link" href="/data-viewer">{{ session.user_name }}'s Dashboard</a>
                     </li>
                 </ul>
             </div>
@@ -183,10 +194,6 @@
                     <div class="question-card analysis-box">
                         <h5>Analysis Result</h5>
                         <div id="analysis-result"></div>
-                        <div class="p-3 bg-light border rounded shadow-sm">
-                            <h6 class="mb-2 text-success">
-                                <i class="bi bi-check-circle-fill me-2"></i>
-                        
                     </div>
                 </div>
             </div>
@@ -221,59 +228,138 @@
             submitButton.disabled = true;
             
             try {
-    const response = await fetch("/api/analyze-solution", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            solution: solution,
-            question_id: "{{ question._id }}"
-        })
-    });
+                const response = await fetch("/api/analyze-solution", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        solution: solution,
+                        question_id: "{{ question._id }}"
+                    })
+                });
 
-    const result = await response.json();
-    let formatted = "";
+                const result = await response.json();
+                
+                if (result.analysis) {
+                    let analysisContent = '';
+                    
+                    // Check if it's a "No solution provided" response
+                    if (result.analysis.includes("No solution provided")) {
+                        analysisContent = `
+                            <div class="p-3 bg-light border rounded shadow-sm">
+                                <p class="no-solution">
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                    No solution provided. Please write your code before submitting.
+                                </p>
+                            </div>
+                        `;
+                    } else {
+                        // Process the analysis content to format it properly
+                        const formattedAnalysis = formatAnalysisContent(result.analysis);
+                        analysisContent = `
+                            <div class="p-3 bg-light border rounded shadow-sm">
+                                <h6 class="mb-3 text-success">
+                                    <i class="bi bi-check-circle-fill me-2"></i>Analysis Summary:
+                                </h6>
+                                <div class="analysis-content">
+                                    ${formattedAnalysis}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById("analysis-result").innerHTML = analysisContent;
+                } else if (result.error) {
+                    document.getElementById("analysis-result").innerHTML = `
+                        <div class="p-3 bg-danger text-white rounded shadow">
+                            <h6 class="mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Error</h6>
+                            <p class="mb-0">${result.error}</p>
+                        </div>
+                    `;
+                }
 
-    if (result.analysis) {
-        formatted = `
-            <div class="p-3 bg-light border rounded shadow-sm">
-                <h6 class="mb-2 text-success">
-                    <i class="bi bi-check-circle-fill me-2"></i>Analysis Summary:
-                </h6>
-                <pre class="mb-0" style="white-space: pre-wrap; font-family: 'Courier New', monospace; max-height: 400px; overflow-y: auto;">${result.analysis}</pre>
-            </div>
-        `;
-    } else if (result.error) {
-        formatted = `
-            <div class="p-3 bg-danger text-white rounded shadow">
-                <h6 class="mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Error</h6>
-                <p class="mb-0">${result.error}</p>
-            </div>
-        `;
-    }
+                const container = document.getElementById("analysis-container");
+                container.style.display = "block";
+                container.scrollIntoView({ behavior: "smooth" });
 
-    const analysisBox = document.getElementById("analysis-result");
-    analysisBox.innerHTML = formatted;
-
-    const container = document.getElementById("analysis-container");
-    container.style.display = "block";
-    container.scrollIntoView({ behavior: "smooth" });
-
-} catch (error) {
-    console.error("Error:", error);
-    document.getElementById("analysis-result").innerHTML = `
-        <div class="p-3 bg-warning text-dark rounded">
-            <strong>Unexpected Error:</strong> ${error.message}
-        </div>
-    `;
-    document.getElementById("analysis-container").style.display = "block";
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("analysis-result").innerHTML = `
+                    <div class="p-3 bg-warning text-dark rounded">
+                        <strong>Unexpected Error:</strong> ${error.message}
+                    </div>
+                `;
+                document.getElementById("analysis-container").style.display = "block";
             } finally {
                 // Restore button state
                 submitButton.innerText = originalText;
                 submitButton.disabled = false;
             }
         });
+        
+        // Function to format the analysis content with proper styling
+        function formatAnalysisContent(analysisText) {
+            // Define the criteria keywords we want to bold
+            const criteria = [
+                "Correctness", 
+                "Time Complexity", 
+                "Space Complexity", 
+                "Code Quality and Readability", 
+                "Potential Improvements"
+            ];
+            
+            // Split the content by lines
+            let lines = analysisText.split('\n');
+            let formattedContent = '';
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                let formatted = false;
+                
+                // Check if this line contains one of our criteria
+                for (let criterion of criteria) {
+                    if (line.includes(criterion)) {
+                        // Extract the part before the criterion as it might contain formatting characters
+                        const prefix = line.split(criterion)[0];
+                        // Get the rest of the line after the criterion
+                        const rest = line.substring(line.indexOf(criterion) + criterion.length);
+                        
+                        // Format the line with the criterion in bold
+                        formattedContent += `
+                            <div class="analysis-criteria">
+                                <p>${prefix}<span class="criteria-title">${criterion}</span>${rest}</p>
+                            </div>
+                        `;
+                        formatted = true;
+                        break;
+                    }
+                }
+                
+                // If it's not a criterion line, just add it as is with a green tick
+                if (!formatted) {
+                    if (line.includes("✓") || line.includes("•")) {
+                        // Already has a bullet or tick, just format it
+                        formattedContent += `
+                            <div class="analysis-criteria">
+                                <p><i class="bi bi-check-circle-fill tick-icon"></i>${line.replace(/^[•✓]\s*/, "")}</p>
+                            </div>
+                        `;
+                    } else {
+                        // Add a green tick icon
+                        formattedContent += `
+                            <div class="analysis-criteria">
+                                <p><i class="bi bi-check-circle-fill tick-icon"></i>${line}</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            return formattedContent;
+        }
     </script>
 </body>
 </html>

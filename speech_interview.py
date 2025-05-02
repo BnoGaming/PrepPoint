@@ -412,12 +412,16 @@ def start_speech_interview():
     # Reset interview data for new interview
     reset_interview_data()
     
-    # This will be the same as in your main app
-    from interviewer import messages, personality, generate_text
+    # Import from interviewer but create a fresh messages list
+    from interviewer import personality, generate_text
     
-    # Reset messages to just the system personality
-    # global messages
-    messages = [{"role": "system", "content": f"{personality}"}]
+    # Create a completely new messages list with just the system personality
+    # This is the key change to restart the interview from scratch
+    fresh_messages = [{"role": "system", "content": f"{personality}"}]
+    
+    # Replace the global messages in the interviewer module to ensure a fresh start
+    import interviewer
+    interviewer.messages = fresh_messages
     
     # Get candidate name from the session or form
     candidate_name = session.get('candidate_name', session.get('user_name', 'Anonymous Candidate'))
@@ -425,15 +429,15 @@ def start_speech_interview():
         candidate_name = request.form['candidate_name']
         session['candidate_name'] = candidate_name
     
-    # Generate initial greeting using Groq AI (this uses your existing generate_text function)
+    # Generate initial greeting using Groq AI with fresh conversation
     bot_response = generate_text()
     
     # Convert to speech
     speech_file = text_to_speech(bot_response)
     
-    # Save history
+    # Save fresh history
     from interviewer import save_history_to_json
-    save_history_to_json(messages, "history.json")
+    save_history_to_json(interviewer.messages, "history.json")
     
     return jsonify({
         'text': bot_response,
