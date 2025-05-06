@@ -55,7 +55,7 @@ os.makedirs('static', exist_ok=True)
 
 # Initialize Groq client
 load_dotenv()
-client = groq.Client(api_key="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")
+client = groq.Client(api_key=os.getenv("GROQ_API_KEY"))
 
 # MongoDB connection
 mongo_client = MongoClient('mongodb://localhost:27017/')
