@@ -21,16 +21,11 @@
 ## ✨ Key Features
 
 ### 🎯 **Interview Preparation Modules**
- - 🧠 **Aptitude Test Module:** Practice quantitative, logical, and verbal reasoning questions commonly seen in initial interview rounds. Timed tests with scoring and performance tracking.
-
+- 🧠 **Aptitude Test Module:** Practice quantitative, logical, and verbal reasoning questions commonly seen in initial interview rounds. Timed tests with scoring and performance tracking.
 - 📊 **DSA Test Module:** Solve frequently asked Data Structures and Algorithms questions. Get AI-powered feedback, scoring, and time analysis for every submission.
-
- - 📄 **Resume Analyzer:** Upload your resume and receive instant AI-generated feedback highlighting strengths, weaknesses, and personalized improvement tips.
-
- - 💬 **Text-Based AI Interviewer:** Engage in dynamic technical Q&A sessions. The AI asks context-aware follow-up questions to mimic real interviewer behavior.
-
+- 📄 **Resume Analyzer:** Upload your resume and receive instant AI-generated feedback highlighting strengths, weaknesses, and personalized improvement tips.
+- 💬 **Text-Based AI Interviewer:** Engage in dynamic technical Q&A sessions. The AI asks context-aware follow-up questions to mimic real interviewer behavior.
 - 🎙️ **Voice & Video Interview Module:** Live TTS & STT interview with Live user behaviour tracking and DSA technical rounds.
-
 - 📹 **Behavioral & Technical Analysis:** Live video tracking, behavior feedback, and post-interview reports.
 
 ### 🔐 Authentication & Security
