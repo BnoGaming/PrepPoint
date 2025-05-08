@@ -47,11 +47,30 @@
 
 ## 🧰 Tech Stack
 
-- **Backend:** Python (Flask)
-- **Frontend:** HTML, CSS, JavaScript
-- **Database:** MongoDB
-- **AI & ML:** NLP, computer vision
-- **Speech Processing:** TTS and STT APIs
+🔧 Backend
+Python + Flask: Handles server logic, routing, and API integration.
+Pymongo: Interface for database interactions with MongoDB.
+Werkzeug: Secure password hashing and session management.
+
+🎨 Frontend
+HTML, CSS, JavaScript: Core technologies for building user interfaces.
+Bootstrap: Provides responsive, mobile-friendly UI components.
+Jinja2: Templating engine for rendering dynamic content in HTML.
+
+🗄️ Database
+MongoDB: NoSQL database for storing user data, test results, and interview logs.
+
+🤖 AI & Machine Learning
+Gemini API & Groq API: Used for text analysis and generating resume feedback.
+Whisper: Speech-to-text model for processing voice interview responses.
+
+🔊 Speech Processing
+Whisper: Converts spoken responses into text for analysis.
+gTTS (Google Text-to-Speech): Generates AI-spoken questions and feedback.
+
+🧠 Facial Analysis
+OpenCV + Haar Cascades: Detects facial expressions and hand gestures during interviews.
+Pillow + NumPy: Used for image processing and manipulation.
 
 ---
 
