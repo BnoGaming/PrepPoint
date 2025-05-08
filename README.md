@@ -9,7 +9,7 @@
 ---
 
 **PrepPoint** is a production-ready, AI-powered interview preparation platform offering a complete, end to end, immersive experience for candidates. 
-🧩 **Core Capabilities:**
+🧩 ****Core Capabilities:****
 - **Resume Analyzer:** Analyzes uploaded resumes and provides detailed feedback, highlighting strengths, weaknesses, and areas for improvement using AI.
 - **DSA Practice Module:** Allows users to solve frequently asked data structures and algorithms questions with real-time AI-powered suggestions and scoring.
 - **Aptitude Test Module:** Offers a variety of aptitude questions to help candidates prepare for the initial screening rounds of interviews.
@@ -20,12 +20,18 @@
 
 ## ✨ Key Features
 
-### 🎯 Interview Preparation Modules
-- **DSA Test Module:** Practice DSA questions with AI suggestions, scoring, and time-tracking.
-- **Resume Analyzer:** Instant resume feedback with AI-generated recommendations.
-- **Text-Based AI Interviewer:** Dynamic technical interviews with real-time follow-ups.
-- **Voice & Video Interview Module:** Live TTS & STT interview with Live user behaviour tracking and DSA technical rounds.
-- **Behavioral and Technical Analysis:** Live video tracking, behavior feedback, and post-interview reports.
+### 🎯 **Interview Preparation Modules**
+ - 🧠 **Aptitude Test Module:** Practice quantitative, logical, and verbal reasoning questions commonly seen in initial interview rounds. Timed tests with scoring and performance tracking.
+
+- 📊 **DSA Test Module:** Solve frequently asked Data Structures and Algorithms questions. Get AI-powered feedback, scoring, and time analysis for every submission.
+
+ - 📄 **Resume Analyzer:** Upload your resume and receive instant AI-generated feedback highlighting strengths, weaknesses, and personalized improvement tips.
+
+ - 💬 **Text-Based AI Interviewer:** Engage in dynamic technical Q&A sessions. The AI asks context-aware follow-up questions to mimic real interviewer behavior.
+
+- 🎙️ **Voice & Video Interview Module:** Live TTS & STT interview with Live user behaviour tracking and DSA technical rounds.
+
+- 📹 **Behavioral & Technical Analysis:** Live video tracking, behavior feedback, and post-interview reports.
 
 ### 🔐 Authentication & Security
 - Secure user login and session management.
@@ -57,7 +63,7 @@
  - **Werkzeug:** Secure password hashing and session management.
 
 🎨 Frontend
- -**HTML, CSS, JavaScript:** Core technologies for building user interfaces.
+ - **HTML, CSS, JavaScript:** Core technologies for building user interfaces.
  - **Bootstrap:** Provides responsive, mobile-friendly UI components.
  - **Jinja2:** Templating engine for rendering dynamic content in HTML.
 
@@ -70,7 +76,7 @@
 
 🔊 Speech Processing
  - **Whisper:** Converts spoken responses into text for analysis.
- -**gTTS (Google Text-to-Speech):** Generates AI-spoken questions and feedback.
+ - **gTTS (Google Text-to-Speech):** Generates AI-spoken questions and feedback.
 
 🧠 Facial Analysis
  - **OpenCV + Haar Cascades:** Detects facial expressions and hand gestures during interviews.
