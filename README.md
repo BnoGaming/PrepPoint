@@ -48,8 +48,11 @@
 ## 🧰 Tech Stack
 
 🔧 Backend
+
 Python + Flask: Handles server logic, routing, and API integration.
+
 Pymongo: Interface for database interactions with MongoDB.
+
 Werkzeug: Secure password hashing and session management.
 
 🎨 Frontend
