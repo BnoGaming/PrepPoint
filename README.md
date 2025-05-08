@@ -9,10 +9,13 @@
 ---
 
 **PrepPoint** is a production-ready, AI-powered interview preparation platform offering a complete, end to end, immersive experience for candidates. 
-- Analyses user resumes and gives feedback, criticism and areas of improvement to the user.
-- Provides users a section where they can practice DSA questions frequently asked in technical rounds with an AI enabled result system which gives suggestions for improvement in the code.
-- Simulates real-world interview environments using AI agents, speech technologies, and live video analysis.
-
+🧩 **Core Capabilities:**
+- **Resume Analyzer:** Analyzes uploaded resumes and provides detailed feedback, highlighting strengths, weaknesses, and areas for improvement using AI.
+- **DSA Practice Module:** Allows users to solve frequently asked data structures and algorithms questions with real-time AI-powered suggestions and scoring.
+- **Aptitude Test Module:** Offers a variety of aptitude questions to help candidates prepare for the initial screening rounds of interviews.
+- **AI-Driven Mock Interviews:** Simulates real-world interview environments using text-based and voice-based AI agents.
+- **Speech & Video Analysis:** Leverages speech technologies (TTS & STT), facial recognition, and behavior tracking to deliver insightful feedback and post-interview analysis.
+- 
 ---
 
 ## ✨ Key Features
